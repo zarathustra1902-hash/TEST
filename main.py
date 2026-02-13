@@ -3,9 +3,8 @@ import logging
 import os
 import uuid
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
-from aiogram.filters.content_type import ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -16,7 +15,7 @@ from fastapi import FastAPI, Request
 # Ключи прямо в коде для тестов
 TELEGRAM_TOKEN = "8224405732:AAG36lqqApmEmrAMGm4ikhu4fIG5Zvm-pRs"
 CLOTHOFF_API_KEY = "b8f2922a81aac1bab2f7c1d28b2f6d5be9705f73"
-APP_URL = "test-production-537b.up.railway.app"  # Твой Railway URL
+APP_URL = "https://test-production-537b.up.railway.app"  # Добавлен https://
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -53,18 +52,20 @@ async def start_command(message: types.Message, state: FSMContext):
     await message.answer("Привет! Нажми кнопку для раздевания.", reply_markup=keyboard)
 
 # Inline кнопка
-@dp.callback_query(lambda c: c.data == "undress")
+@dp.callback_query(F.data == "undress")
 async def handle_undress(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Form.waiting_photo)
     await callback.message.answer("Отправь фото для обработки.")
     await callback.answer()
 
 # Обработка фото
-@dp.message(Form.waiting_photo, content_types=ContentType.PHOTO)
+@dp.message(Form.waiting_photo, F.photo)
 async def process_photo(message: types.Message, state: FSMContext):
     photo = message.photo[-1]
     file_info = await bot.get_file(photo.file_id)
-    image_bytes = await bot.download_file(file_info.file_path)
+    # Скачиваем файл в байты
+    file_content = await bot.download_file(file_info.file_path)
+    image_bytes = file_content.read()  # Получаем байты
 
     task_id = str(uuid.uuid4())
     pending_tasks[task_id] = message.chat.id
@@ -115,7 +116,7 @@ async def clothoff_webhook_handler(request: Request):
 async def telegram_webhook_handler(request: Request):
     update = await request.json()
     telegram_update = types.Update(**update)
-    await dp.feed_update(bot=bot, update=telegram_update)
+    await dp.feed_update(bot, telegram_update)  # Исправлен вызов
     return {"status": "ok"}
 
 # Запуск
