@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 # Ключи прямо в коде для тестов
 TELEGRAM_TOKEN = "8224405732:AAG36lqqApmEmrAMGm4ikhu4fIG5Zvm-pRs"
 CLOTHOFF_API_KEY = "b8f2922a81aac1bab2f7c1d28b2f6d5be9705f73"
-APP_URL = "https://test-bot-production-8a33.up.railway.app"  # Твой Railway URL
+APP_URL = "test-production-537b.up.railway.app"  # Твой Railway URL
 
 # Логи
 logging.basicConfig(level=logging.INFO)
@@ -122,4 +122,5 @@ async def telegram_webhook_handler(request: Request):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
+
     uvicorn.run(app, host="0.0.0.0", port=port)
